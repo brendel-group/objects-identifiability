@@ -18,7 +18,7 @@
     <meta property="og:title" content="Provably Learning Object-Centric Representations">
     <meta property="og:description"
         content="Learning structured representations of the visual world in terms of objects promises to significantly improve the generalization abilities of current machine learning models. While recent efforts to this end have shown promising empirical progress, a theoretical account of when unsupervised object-centric representation learning is possible is still lacking. Consequently, understanding the reasons for the success of existing object-centric methods as well as designing new theoretically grounded methods remains challenging. In the present work, we analyze when object-centric representations can provably be learned without supervision. To this end, we first introduce two assumptions on the generative process for scenes comprised of several objects, which we call compositionality and irreducibility. Under this generative process, we prove that the ground-truth object representations can be identified by an invertible and compositional inference model, even in the presence of dependences between objects. We empirically validate our results through experiments on synthetic data. Finally, we provide evidence that our theory holds predictive power for existing object-centric models by showing a close correspondence between models' compositionality and invertibility and their identifiability empirically.">
-    <meta property="og:image" content="https://brendel-group.github.io/objects-identifiability/img/overview.svg">
+    <meta property="og:image" content="https://brendel-group.github.io/objects-identifiability/img/intro.svg">
 
     <!-- Twitter -->
     <meta property="twitter:card" content="summary_large_image">
@@ -106,10 +106,6 @@
         .collapse-container .collapse.collapsing {
             height: 7.7em;
         }
-
-        a.disabled {
-            pointer-events: none;
-        }
     </style>
 
     <title>Provably Learning Object-Centric Representations</title>
@@ -128,12 +124,12 @@
                 <!-- Begin author list-->
                 <div class="row text-center mb-4">
                     <div class="col-sm-4 mb-4">
-                        Jack Brady*
+                        Jack Brady
                         <a href="mailto:jack.brady@tue.mpg.de"><i class="far fa-envelope"></i></a><br>
                         University of Tübingen & <nobr>MPI-IS</nobr>
                     </div>
                     <div class="col-sm-4 mb-4">
-                        Roland S. Zimmermann*
+                        Roland S. Zimmermann
                         <a href="mailto:research@rzimmermann.com"><i class="far fa-envelope"></i></a>
                         <a href="https://rzimmermann.com" target="_blank"><i class="fas fa-link"></i></a></br>
                         University of Tübingen & <nobr>MPI-IS</nobr>
@@ -149,11 +145,11 @@
                         MPI-IS
                     </div>
                     <div class="col-sm-4 mb-4">
-                        Julius von Kügelgen⁺<br>
+                        Julius von Kügelgen<br>
                         University of Cambridge & <nobr>MPI-IS</nobr>
                     </div>
                     <div class="col-sm-4 mb-4">
-                        Wieland Brendel⁺
+                        Wieland Brendel
                         <a href="mailto:wieland.brendel@tue.mpg.de"><i class="far fa-envelope"></i></a><br>
                         MPI-IS
                     </div>
@@ -171,7 +167,7 @@
                     </div>
                     <div class="col-sm-6 mb-6">
                         <h4>
-                            <a href="" target="_blank" class="disabled">
+                            <a href="" target="_blank">
                                 <i class="fab fa-github"></i>
                                 Code [Coming Soon]
                             </a>
@@ -199,7 +195,7 @@
                                 <span class="badge badge-pill badge-primary">May '23</span>
                             </td>
                             <td>
-                                The paper was accepted for an Oral Presentation at <a href="https://icml.cc/" target="_blank">ICML 2023</a>!
+                                Our paper was accepted for an Oral Presentation at <a href="https://icml.cc/" target="_blank">ICML 2023</a>!
                             </td>
                         </tr>
                         <tr>
@@ -207,7 +203,7 @@
                                 <span class="badge badge-pill badge-primary">May '23</span>
                             </td>
                             <td>
-                                The pre-print is now available on arXiv: <a href="https://arxiv.org/abs/2305.14229" target="_blank">https://arxiv.org/abs/2305.14229</a>
+                                The pre-print is now available on <a href="https://arxiv.org/abs/2305.14229" target="_blank">arXiv</a>
                             </td>
                         </tr>
                     </table>
@@ -270,6 +266,103 @@
                     </div>
                 </div>
 
+                <div class="row mt-2">
+                    <h3>How do we formalize object-centric data in our theoretical framework?</h3>
+                </div>
+                <div class="row mt-2 row-dense">
+                    <div class="col-12">
+                        <p>
+                            We define a generative model for multi-object scenes where objects are described by latent slots. We would like to enforce that each latent slot is
+                            responsible for encoding a distinct object in a scene. To this end, we make two core assumptions on the generator function from latent slots to images.
+                        </p>
+
+                        <p>
+                            The first assumption we make, <b>compositionality</b>, captures that each object is generated by one latent slot. We formalize this through an assumption
+                            on the Jacobian matrix of the generator function, which states that each pixel has a non-zero partial derivate with at most one latent slot.
+                            This imposes a local sparsity structure on the Jacobian visualized below (Section 2.1)
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div style="text-align: center;">
+                        <img src="img/compositionality.svg" style="max-width: 700px;" />
+                    </div>
+                    <small class="text-muted">
+                        Difference between a compositional and a non-compositional generator. (<b>A</b>) For a compositional generator <b>f</b>, every pixel is
+                        affected by at most one latent slot. As a result, there always exists an ordering of the pixels such that the generator’s Jacobian <b>Jf</b> consists
+                        of disjoint blocks, one for each latent slot (bottom). Note that both the pixel ordering and the specific structure of the Jacobian are not
+                        fixed across scenes and might depend on the latent input z. (<b>B</b>) For a non-compositional generator, there exists no pixel ordering that
+                        exposes such a structure in the Jacobian, since the same pixel can be affected by more than one latent slot
+                    </small>
+                </div>
+                <div class="row mt-2 row-dense">
+                    <div class="col-12">
+                        <p></p>
+                        <p>
+                            The second assumption we make, <b>irreducibility</b>, captures that each latent slot generates at most one object rather than multiple objects.
+                            To enforce this, we assume that the mechanisms which generate parts of the same object are dependent. We formalize a mechanism through the
+                            Jacobian matrix of the generator and dependence in a non-statistical sense using the rank of these mechanisms (Section 2.2).
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div style="text-align: center;">
+                        <img src="img/mechanisms.svg" style="max-width: 700px;" />
+                    </div>
+                    <small class="text-muted">
+                        (<b>A</b>) A simple example of a reducible mechanism is one for which disjoint subsets of latents from
+                        the same slot render pixel groups S1 and S2 separately such that they form independent sub-mechanisms. This
+                        independence between sub-mechanisms is indicated by the difference in colors. (<b>B</b>) Not all reducible mechanisms look as simple as panel
+                        A: here, S1 and S2 depend on every latent component in the slot, but the information in S1 ∪ S2 still decomposes across S1 and S2 as
+                        sub-mechanisms 1 and 2 are independent. (<b>C</b>) In contrast, for an irreducible mechanism, the information does not decompose across any
+                        pixel partition S, S′, and so it is impossible to separate it into independent sub-mechanisms.
+                    </small>
+                </div>
+
+                <div class="row mt-2">
+                    <h3>When can object-centric representations be learned in our framework?</h3>
+                </div>
+                <div class="row mt-2 row-dense">
+                    <div class="col-12">
+                        <p>
+                            Under this generative model, we can then prove our <b>main theoretical result</b>: Inference models which are invertible (i.e. minimize reconstruction loss)
+                            and have a compositional inverse (i.e. decoder maps different slots to different pixels) will identify the ground-truth latent slots (slot identifiability) (Theorem 1)
+                        </p>
+                        <p>
+                            We validate empirically on controlled synthetic data that inference models which maximize invertibility and compositionality indeed identify
+                            the ground-truth latent slots (Section 5.1)
+                        </p>
+                        <p>
+                            Finally, we provide evidence that our theory holds predictive power for existing object-centric models by showing a close correspondence between
+                            models’ compositionality and invertibility, and slot-identifiability (Section 5.2)
+                        </p>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div style="text-align: center;">
+                        <img src="img/results.svg" style="max-width: 700px;" />
+                    </div>
+                    <small class="text-muted">
+                        We train object-centric models on controlled synthetic data (<b>A</b>) and on synthetic images (<b>B</b>).
+                        We then evaluate the models' compositionality and invertibility measured by our proposed compositional contrast and the reconstruction error.
+                        We see that these properties are predictive of the models' identifiability.
+                    </small>
+                </div>
+
+
+                <div class="row">
+                    <h3>Acknowledgements & Funding</h3>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-12 collapse-container">
+                        <p class="collapse" id="acknowledgmentsText" aria-expanded="false">
+                            We thank: the anonymous reviewers for helpful suggestions which lead to improvements in the manuscript, Andrea Dittadi for helpful discussions regarding experiments, Attila Juhos, Amin Charusaie, Michel Besserve, and Simon Buchholz for helpful technical discussions, and Zac Cranko for theoretical efforts in the early stages of the project.
+                            The authors thank the <a href="https://imprs.is.mpg.de/" target="_blank">International Max Planck Research School for Intelligent Systems (IMPRS-IS)</a> for supporting JB, RSZ and YS.
+                            This work was supported by the German Federal Ministry of Education and Research (BMBF): Tübingen AI Center, FKZ: 01IS18039A, 01IS18039B. WB acknowledges financial support via an Emmy Noether Grant funded by the German Research Foundation (DFG) under grant no. BR 6382/1-1 and via the Open Philantropy Foundation funded by the Good Ventures Foundation. WB is a member of the Machine Learning Cluster of Excellence, EXC number 2064/1 – Project number 390727645.
+                        </p>
+                       <a role="button" id="moreless" class="collapsed" data-toggle="collapse" href="#acknowledgmentsText" aria-expanded="false" aria-controls="acknowledgmentsText"></a>
+                    </div>
+                </div>
                 <div class="row">
                     <h3>BibTeX</h3>
                 </div>
@@ -285,8 +378,8 @@
                             &nbsp;&nbsp;&nbsp;&nbsp;Zimmermann, Roland S. and<br>
                             &nbsp;&nbsp;&nbsp;&nbsp;Sharma, Yash and<br>
                             &nbsp;&nbsp;&nbsp;&nbsp;Sch{\"o}lkopf, Bernhard and<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;von K{\"u}gelgen, Julius and<br>
-                            &nbsp;&nbsp;&nbsp;&nbsp;Brendel, Wieland<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;von K{\"u}gelgen, Julius<br>
+                            &nbsp;&nbsp;&nbsp;&nbsp;Brendel, Wieland and<br>
                             &nbsp;&nbsp;},<br>
                             &nbsp;&nbsp;title = {<br>
                             &nbsp;&nbsp;&nbsp;&nbsp;Provably Learning<br>
