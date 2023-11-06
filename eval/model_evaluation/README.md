@@ -1,0 +1,1 @@
+Evaluate the Slot Identifiability Score (SIS) of a slot-based object-centric model. This includes measuring both how well each ground-truth slot can be predicted by any of the inferred slots and also measuring how well said ground-truth slot can be predicted by any other (than the ideal) inferred slot.
