@@ -10,6 +10,7 @@ from models.monet.base_model import BaseModel
 from models.monet.encoder_decoder import BroadcastDecoderNet, EncoderNet
 from models.monet.unet import UNet
 
+
 @dataclass(eq=False, repr=False)
 class Monet(BaseModel):
     latent_size: int
@@ -60,9 +61,9 @@ class Monet(BaseModel):
         mask_kl = self._compute_mask_kl(masks, masks_pred)
 
         loss = neg_log_pxs + self.beta_kl * kl_zs + self.gamma * mask_kl
-        xhs = (slots * masks.unsqueeze(2))
-        
-        #xhs_2  = (slots * masks_pred.unsqueeze(2))
+        xhs = slots * masks.unsqueeze(2)
+
+        # xhs_2  = (slots * masks_pred.unsqueeze(2))
 
         return slot_means.flatten(1), xhs.sum(dim=1), loss
 

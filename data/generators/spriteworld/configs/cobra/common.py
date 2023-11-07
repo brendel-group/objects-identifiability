@@ -24,15 +24,14 @@ from spriteworld import renderers as spriteworld_renderers
 
 
 def action_space():
-  return action_spaces.SelectMove(scale=0.25)
+    return action_spaces.SelectMove(scale=0.25)
 
 
 def renderers():
-  return {
-      'image':
-          spriteworld_renderers.PILRenderer(
-              image_size=(64, 64),
-              anti_aliasing=5,
-              color_to_rgb=spriteworld_renderers.color_maps.hsv_to_rgb,
-          )
-  }
+    return {
+        "image": spriteworld_renderers.PILRenderer(
+            image_size=(64, 64),
+            anti_aliasing=5,
+            color_to_rgb=spriteworld_renderers.color_maps.hsv_to_rgb,
+        )
+    }

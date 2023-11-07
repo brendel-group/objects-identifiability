@@ -1,6 +1,7 @@
 import torch
 from torch import Tensor, nn
 
+
 class ResidualBlock(nn.Module):
     def __init__(
         self,

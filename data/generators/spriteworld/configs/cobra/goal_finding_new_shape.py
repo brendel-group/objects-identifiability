@@ -33,47 +33,45 @@ from spriteworld.configs.cobra import common
 TERMINATE_DISTANCE = 0.075
 NUM_TARGETS = 1
 MODES_SHAPES = {
-    'train': distribs.Discrete('shape', ['square']),
-    'test': distribs.Discrete('shape', ['triangle', 'circle']),
+    "train": distribs.Discrete("shape", ["square"]),
+    "test": distribs.Discrete("shape", ["triangle", "circle"]),
 }
 
 
-def get_config(mode='train'):
-  """Generate environment config.
+def get_config(mode="train"):
+    """Generate environment config.
 
-  Args:
-    mode: 'train' or 'test'.
+    Args:
+      mode: 'train' or 'test'.
 
-  Returns:
-    config: Dictionary defining task/environment configuration. Can be fed as
-      kwargs to environment.Environment.
-  """
+    Returns:
+      config: Dictionary defining task/environment configuration. Can be fed as
+        kwargs to environment.Environment.
+    """
 
-  factors = distribs.Product([
-      MODES_SHAPES[mode],
-      distribs.Continuous('x', 0.1, 0.9),
-      distribs.Continuous('y', 0.1, 0.9),
-      distribs.Discrete('scale', [0.13]),
-      distribs.Continuous('c0', 0., 0.4),
-      distribs.Continuous('c1', 0.3, 1.),
-      distribs.Continuous('c2', 0.9, 1.),
-  ])
-  sprite_gen = sprite_generators.generate_sprites(
-      factors, num_sprites=NUM_TARGETS)
-  # Randomize sprite ordering to eliminate any task information from occlusions
-  sprite_gen = sprite_generators.shuffle(sprite_gen)
+    factors = distribs.Product(
+        [
+            MODES_SHAPES[mode],
+            distribs.Continuous("x", 0.1, 0.9),
+            distribs.Continuous("y", 0.1, 0.9),
+            distribs.Discrete("scale", [0.13]),
+            distribs.Continuous("c0", 0.0, 0.4),
+            distribs.Continuous("c1", 0.3, 1.0),
+            distribs.Continuous("c2", 0.9, 1.0),
+        ]
+    )
+    sprite_gen = sprite_generators.generate_sprites(factors, num_sprites=NUM_TARGETS)
+    # Randomize sprite ordering to eliminate any task information from occlusions
+    sprite_gen = sprite_generators.shuffle(sprite_gen)
 
-  task = tasks.FindGoalPosition(terminate_distance=TERMINATE_DISTANCE)
+    task = tasks.FindGoalPosition(terminate_distance=TERMINATE_DISTANCE)
 
-  config = {
-      'task': task,
-      'action_space': common.action_space(),
-      'renderers': common.renderers(),
-      'init_sprites': sprite_gen,
-      'max_episode_length': 20,
-      'metadata': {
-          'name': os.path.basename(__file__),
-          'mode': mode
-      }
-  }
-  return config
+    config = {
+        "task": task,
+        "action_space": common.action_space(),
+        "renderers": common.renderers(),
+        "init_sprites": sprite_gen,
+        "max_episode_length": 20,
+        "metadata": {"name": os.path.basename(__file__), "mode": mode},
+    }
+    return config

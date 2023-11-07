@@ -16,6 +16,7 @@ from data.generators.synth_data_gen import gen_synth_data
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+
 def set_seed(seed):
     """
     Fixes random seed
@@ -41,10 +42,27 @@ def setup_direcs(args, seed):
     Returns:
         directory for model logs as a string
     """
-    model_dir = "logs/"+args.data+"_"+str(args.num_slots)+"_"+str(args.inf_slot_dim)+"/enc_"+args.encoder+"_dec_"+args.decoder+"_lambda_"+str(args.lam)+"/saved_models/"+"seed_"+str(seed)+"/"
+    model_dir = (
+        "logs/"
+        + args.data
+        + "_"
+        + str(args.num_slots)
+        + "_"
+        + str(args.inf_slot_dim)
+        + "/enc_"
+        + args.encoder
+        + "_dec_"
+        + args.decoder
+        + "_lambda_"
+        + str(args.lam)
+        + "/saved_models/"
+        + "seed_"
+        + str(seed)
+        + "/"
+    )
 
     if not os.path.exists(model_dir):
-      os.makedirs(model_dir)
+        os.makedirs(model_dir)
 
     return model_dir
 
@@ -67,19 +85,27 @@ def get_data(args):
         val_batch = 100
 
     elif args.data == "spriteworld":
-        data_path = "data/datasets/"+str(args.num_slots)+"_obj_sprites.npz"
-        X = np.load(data_path)['arr_0']
-        Z = np.load(data_path)['arr_1']
+        data_path = "data/datasets/" + str(args.num_slots) + "_obj_sprites.npz"
+        X = np.load(data_path)["arr_0"]
+        Z = np.load(data_path)["arr_1"]
         transform = transforms.ToTensor()
         val_batch = 5
 
     # train and validation splits
-    Z_train, Z_val = np.split(Z, [int(.9 * len(Z))])
-    X_train, X_val = np.split(X, [int(.9 * len(Z))])
+    Z_train, Z_val = np.split(Z, [int(0.9 * len(Z))])
+    X_train, X_val = np.split(X, [int(0.9 * len(Z))])
 
     # create dataloaders
-    train_loader = DataLoader(ObjectsDataset(X_train, Z_train, transform=transform), batch_size=args.batch_size, shuffle=True)
-    val_loader = DataLoader(ObjectsDataset(X_val, Z_val, transform=transform), batch_size=val_batch, shuffle=True)
+    train_loader = DataLoader(
+        ObjectsDataset(X_train, Z_train, transform=transform),
+        batch_size=args.batch_size,
+        shuffle=True,
+    )
+    val_loader = DataLoader(
+        ObjectsDataset(X_val, Z_val, transform=transform),
+        batch_size=val_batch,
+        shuffle=True,
+    )
 
     return train_loader, val_loader
 
@@ -106,27 +132,48 @@ def get_model(args):
 
     # get encoder
     if args.data == "synth":
-        encoder = MLP(input_dim = args.slot_x_dim * args.num_slots, output_dim = args.inf_slot_dim * args.num_slots).to(device)
+        encoder = MLP(
+            input_dim=args.slot_x_dim * args.num_slots,
+            output_dim=args.inf_slot_dim * args.num_slots,
+        ).to(device)
     elif args.encoder == "monolithic":
-        encoder = encoders.MonolithicEncoder(num_slots = args.num_slots, hid_dim=args.inf_slot_dim).to(device)
+        encoder = encoders.MonolithicEncoder(
+            num_slots=args.num_slots, hid_dim=args.inf_slot_dim
+        ).to(device)
     elif args.encoder == "slot-attention":
-        encoder = encoders.SlotEncoder(resolution = resolution, num_slots= args.num_slots, slot_dim=args.inf_slot_dim, chan_dim=chan_dim).to(device)
+        encoder = encoders.SlotEncoder(
+            resolution=resolution,
+            num_slots=args.num_slots,
+            slot_dim=args.inf_slot_dim,
+            chan_dim=chan_dim,
+        ).to(device)
 
     # get decoder
     if args.data == "synth":
-        decoder = MLP(input_dim=args.inf_slot_dim * args.num_slots, output_dim=args.slot_x_dim * args.num_slots).to(device)
+        decoder = MLP(
+            input_dim=args.inf_slot_dim * args.num_slots,
+            output_dim=args.slot_x_dim * args.num_slots,
+        ).to(device)
     if args.decoder == "baseline":
-        decoder = decoders.BaselineDecoder(num_slots = args.num_slots, slot_dim = args.inf_slot_dim).to(device)
+        decoder = decoders.BaselineDecoder(
+            num_slots=args.num_slots, slot_dim=args.inf_slot_dim
+        ).to(device)
     elif args.decoder == "spatial-broadcast":
-        decoder = decoders.SpatialBroadcastDecoder(slot_dim=args.inf_slot_dim, resolution=resolution, chan_dim=chan_dim).to(device)
+        decoder = decoders.SpatialBroadcastDecoder(
+            slot_dim=args.inf_slot_dim, resolution=resolution, chan_dim=chan_dim
+        ).to(device)
 
     # get autoencoder
-    autoencoder = AutoEncoder(num_slots=args.num_slots, slot_dim = args.inf_slot_dim, encoder = encoder, decoder = decoder).to(device)
+    autoencoder = AutoEncoder(
+        num_slots=args.num_slots,
+        slot_dim=args.inf_slot_dim,
+        encoder=encoder,
+        decoder=decoder,
+    ).to(device)
     return autoencoder
 
 
 def hungarian_algorithm(cost_matrix):
-
     """
     Batch-applies the hungarian algorithm to find a matching that minimizes the overall cost.
     Code adapted from: https://github.com/addtt/object-centric-library/blob/main/utils/slot_matching.py
@@ -167,7 +214,7 @@ def hungarian_algorithm(cost_matrix):
         ]
     )
     device = cost_matrix.device
-    return smallest_cost_matrix.to(device)*-1, indices.to(device)
+    return smallest_cost_matrix.to(device) * -1, indices.to(device)
 
 
 def build_grid(resolution):
@@ -178,7 +225,7 @@ def build_grid(resolution):
     Args:
         resolution: tuple containing width and height of image (width, height)
     """
-    ranges = [np.linspace(0., 1., num=res) for res in resolution]
+    ranges = [np.linspace(0.0, 1.0, num=res) for res in resolution]
     grid = np.meshgrid(*ranges, sparse=False, indexing="ij")
     grid = np.stack(grid, axis=-1)
     grid = np.reshape(grid, [resolution[0], resolution[1], -1])
@@ -186,9 +233,15 @@ def build_grid(resolution):
     grid = grid.astype(np.float32)
     return torch.from_numpy(np.concatenate([grid, 1.0 - grid], axis=-1)).to(device)
 
-def construct_invertible_mlp(os_dim, zs_dim, n_layers, nonlinear=True, n_iter_cond_thresh=10000,
-                             cond_thresh_ratio=0.25):
 
+def construct_invertible_mlp(
+    os_dim,
+    zs_dim,
+    n_layers,
+    nonlinear=True,
+    n_iter_cond_thresh=10000,
+    cond_thresh_ratio=0.25,
+):
     """
      Create an (approximately) invertible mixing network based on an MLP.
      Based on the mixing code by Hyvarinen et al.
@@ -204,7 +257,7 @@ def construct_invertible_mlp(os_dim, zs_dim, n_layers, nonlinear=True, n_iter_co
 
     Returns:
         PyTorch invertible MLP mixing
-     """
+    """
 
     layers = []
     if nonlinear:
@@ -232,7 +285,6 @@ def construct_invertible_mlp(os_dim, zs_dim, n_layers, nonlinear=True, n_iter_co
     condThresh = condList[int(n_iter_cond_thresh * cond_thresh_ratio)]
 
     for i in range(n_layers):
-
         if i == 0:
             lin_layer = nn.Linear(os_dim, zs_dim, bias=False)
         else:

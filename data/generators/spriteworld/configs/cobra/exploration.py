@@ -35,39 +35,38 @@ from spriteworld.configs.cobra import common
 
 
 def get_config(mode=None):
-  """Generate environment config.
+    """Generate environment config.
 
-  Args:
-    mode: Unused.
+    Args:
+      mode: Unused.
 
-  Returns:
-    config: Dictionary defining task/environment configuration. Can be fed as
-      kwargs to environment.Environment.
-  """
-  del mode  # No train/test split for pure exploration
+    Returns:
+      config: Dictionary defining task/environment configuration. Can be fed as
+        kwargs to environment.Environment.
+    """
+    del mode  # No train/test split for pure exploration
 
-  factors = distribs.Product([
-      distribs.Continuous('x', 0.1, 0.9),
-      distribs.Continuous('y', 0.1, 0.9),
-      distribs.Discrete('shape', ['square', 'triangle', 'circle']),
-      distribs.Discrete('scale', [0.13]),
-      distribs.Continuous('c0', 0., 1.),
-      distribs.Continuous('c1', 0.3, 1.),
-      distribs.Continuous('c2', 0.9, 1.),
-  ])
-  num_sprites = lambda: np.random.randint(1, 7)
-  sprite_gen = sprite_generators.generate_sprites(
-      factors, num_sprites=num_sprites)
-  task = tasks.NoReward()
+    factors = distribs.Product(
+        [
+            distribs.Continuous("x", 0.1, 0.9),
+            distribs.Continuous("y", 0.1, 0.9),
+            distribs.Discrete("shape", ["square", "triangle", "circle"]),
+            distribs.Discrete("scale", [0.13]),
+            distribs.Continuous("c0", 0.0, 1.0),
+            distribs.Continuous("c1", 0.3, 1.0),
+            distribs.Continuous("c2", 0.9, 1.0),
+        ]
+    )
+    num_sprites = lambda: np.random.randint(1, 7)
+    sprite_gen = sprite_generators.generate_sprites(factors, num_sprites=num_sprites)
+    task = tasks.NoReward()
 
-  config = {
-      'task': task,
-      'action_space': common.action_space(),
-      'renderers': common.renderers(),
-      'init_sprites': sprite_gen,
-      'max_episode_length': 10,
-      'metadata': {
-          'name': os.path.basename(__file__)
-      }
-  }
-  return config
+    config = {
+        "task": task,
+        "action_space": common.action_space(),
+        "renderers": common.renderers(),
+        "init_sprites": sprite_gen,
+        "max_episode_length": 10,
+        "metadata": {"name": os.path.basename(__file__)},
+    }
+    return config

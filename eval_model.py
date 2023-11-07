@@ -37,8 +37,9 @@ def eval_model(args, model, data_loader):
             jacobian = torch.vmap(torch.func.jacfwd(model.decoder))(zh.flatten(1))
             if args.data == "spriteworld":
                 jacobian = jacobian.flatten(1, 4)
-            run_c_comp += compositional_contrast(jacobian, args.inf_slot_dim, args.data).item()
-
+            run_c_comp += compositional_contrast(
+                jacobian, args.inf_slot_dim, args.data
+            ).item()
 
             # save latents
             if b_it == 0:
@@ -52,13 +53,14 @@ def eval_model(args, model, data_loader):
 
     # get slot identifiability score
     if args.data == "synth":
-
         # get matrix of R2 scores
         corr_mat = correlation(Z, Zh)
         corr_mat = torch.nn.functional.relu(torch.from_numpy(corr_mat))
 
         # resolve permutation
-        _, inds = utils.hungarian_algorithm(corr_mat.view(1, args.num_slots, args.num_slots)*-1)
+        _, inds = utils.hungarian_algorithm(
+            corr_mat.view(1, args.num_slots, args.num_slots) * -1
+        )
         perm_corr_mat = corr_mat[:, inds[0][1]]
 
         # get mean R2 on-diagonal

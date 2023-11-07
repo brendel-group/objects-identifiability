@@ -1,5 +1,6 @@
 import torch
 
+
 class AutoEncoder(torch.nn.Module):
     def __init__(self, num_slots, slot_dim, encoder, decoder):
         super().__init__()

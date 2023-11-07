@@ -6,6 +6,7 @@ from torch import Tensor, nn
 
 from models.monet.nn_utils import get_activation_module, make_sequential_from_config
 
+
 @dataclass(eq=False, repr=False)
 class EncoderNet(nn.Module):
     width: int

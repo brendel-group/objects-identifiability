@@ -3,6 +3,7 @@ from torch import nn
 from torch.nn import functional as F
 import utils
 
+
 class SoftPositionEmbed(nn.Module):
     def __init__(self, hidden_size, resolution):
         """Builds the soft position embedding layer.
@@ -22,7 +23,9 @@ class SoftPositionEmbed(nn.Module):
 
 
 class MLP(nn.Module):
-    def __init__(self, input_dim, output_dim, hidden_dim=80, n_layers=3, nonlinear=True):
+    def __init__(
+        self, input_dim, output_dim, hidden_dim=80, n_layers=3, nonlinear=True
+    ):
         super().__init__()
         self.input_dim = input_dim
         self.output_dim = output_dim
@@ -40,7 +43,9 @@ class MLP(nn.Module):
             _fc_list = [nn.Linear(self.input_dim, self.hidden_dim[0])]
             for i in range(1, self.n_layers - 1):
                 _fc_list.append(nn.Linear(self.hidden_dim[i - 1], self.hidden_dim[i]))
-            _fc_list.append(nn.Linear(self.hidden_dim[self.n_layers - 2], self.output_dim))
+            _fc_list.append(
+                nn.Linear(self.hidden_dim[self.n_layers - 2], self.output_dim)
+            )
         self.fc = nn.ModuleList(_fc_list)
 
     def forward(self, x):
@@ -54,7 +59,7 @@ class MLP(nn.Module):
 
 
 class SlotAttention(nn.Module):
-    def __init__(self, num_slots, dim, iters = 3, eps = 1e-8, hidden_dim = 128):
+    def __init__(self, num_slots, dim, iters=3, eps=1e-8, hidden_dim=128):
         """
         PyTorch code for Slot Attention module.
         Code from: https://github.com/evelinehong/slot-attention-pytorch/blob/master/model.py
@@ -63,7 +68,7 @@ class SlotAttention(nn.Module):
         self.num_slots = num_slots
         self.iters = iters
         self.eps = eps
-        self.scale = dim ** -0.5
+        self.scale = dim**-0.5
         self.slots_mu = nn.Parameter(torch.randn(1, 1, dim))
         self.slots_log_sigma = nn.Parameter(torch.randn(1, 1, dim))
 
@@ -99,16 +104,13 @@ class SlotAttention(nn.Module):
             slots = self.norm_slots(slots)
             q = self.to_q(slots)
 
-            dots = torch.einsum('bid,bjd->bij', q, k) * self.scale
+            dots = torch.einsum("bid,bjd->bij", q, k) * self.scale
             attn = dots.softmax(dim=1) + self.eps
             attn = attn / attn.sum(dim=-1, keepdim=True)
 
-            updates = torch.einsum('bjd,bij->bid', v, attn)
+            updates = torch.einsum("bjd,bij->bid", v, attn)
 
-            slots = self.gru(
-                updates.reshape(-1, d),
-                slots_prev.reshape(-1, d)
-            )
+            slots = self.gru(updates.reshape(-1, d), slots_prev.reshape(-1, d))
 
             slots = slots.reshape(b, -1, d)
             slots = slots + self.fc2(F.relu(self.fc1(self.norm_pre_ff(slots))))

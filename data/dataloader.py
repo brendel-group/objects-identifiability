@@ -1,5 +1,6 @@
 from torch.utils.data import Dataset
 
+
 class ObjectsDataset(Dataset):
     """
     Creates dataloader for object-centric data.
@@ -12,10 +13,11 @@ class ObjectsDataset(Dataset):
     Returns:
         inferred batch of observations and ground-truth latents
     """
+
     def __init__(self, X, Z, transform):
-      self.obs = X
-      self.factors = Z
-      self.transform = transform
+        self.obs = X
+        self.factors = Z
+        self.transform = transform
 
     def __len__(self):
         return len(self.obs)
@@ -26,6 +28,3 @@ class ObjectsDataset(Dataset):
             x = self.transform(x)
         factors = self.factors[idx]
         return x, factors
-
-
-

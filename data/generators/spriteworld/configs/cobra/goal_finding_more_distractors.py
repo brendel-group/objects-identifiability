@@ -35,62 +35,69 @@ from spriteworld.configs.cobra import common
 TERMINATE_DISTANCE = 0.075
 NUM_TARGETS = 2
 MODES_NUM_DISTRACTORS = {
-    'train': 1,
-    'test': 2,
+    "train": 1,
+    "test": 2,
 }
 
 
-def get_config(mode='train'):
-  """Generate environment config.
+def get_config(mode="train"):
+    """Generate environment config.
 
-  Args:
-    mode: 'train' or 'test'.
+    Args:
+      mode: 'train' or 'test'.
 
-  Returns:
-    config: Dictionary defining task/environment configuration. Can be fed as
-      kwargs to environment.Environment.
-  """
+    Returns:
+      config: Dictionary defining task/environment configuration. Can be fed as
+        kwargs to environment.Environment.
+    """
 
-  shared_factors = distribs.Product([
-      distribs.Continuous('x', 0.1, 0.9),
-      distribs.Continuous('y', 0.1, 0.9),
-      distribs.Discrete('shape', ['square', 'triangle', 'circle']),
-      distribs.Discrete('scale', [0.13]),
-      distribs.Continuous('c1', 0.3, 1.),
-      distribs.Continuous('c2', 0.9, 1.),
-  ])
-  target_hue = distribs.Continuous('c0', 0., 0.4)
-  distractor_hue = distribs.Continuous('c0', 0.5, 0.9)
-  target_factors = distribs.Product([
-      target_hue,
-      shared_factors,
-  ])
-  distractor_factors = distribs.Product([
-      distractor_hue,
-      shared_factors,
-  ])
+    shared_factors = distribs.Product(
+        [
+            distribs.Continuous("x", 0.1, 0.9),
+            distribs.Continuous("y", 0.1, 0.9),
+            distribs.Discrete("shape", ["square", "triangle", "circle"]),
+            distribs.Discrete("scale", [0.13]),
+            distribs.Continuous("c1", 0.3, 1.0),
+            distribs.Continuous("c2", 0.9, 1.0),
+        ]
+    )
+    target_hue = distribs.Continuous("c0", 0.0, 0.4)
+    distractor_hue = distribs.Continuous("c0", 0.5, 0.9)
+    target_factors = distribs.Product(
+        [
+            target_hue,
+            shared_factors,
+        ]
+    )
+    distractor_factors = distribs.Product(
+        [
+            distractor_hue,
+            shared_factors,
+        ]
+    )
 
-  target_sprite_gen = sprite_generators.generate_sprites(
-      target_factors, num_sprites=NUM_TARGETS)
-  distractor_sprite_gen = sprite_generators.generate_sprites(
-      distractor_factors, num_sprites=MODES_NUM_DISTRACTORS[mode])
-  sprite_gen = sprite_generators.chain_generators(target_sprite_gen,
-                                                  distractor_sprite_gen)
-  # Randomize sprite ordering to eliminate any task information from occlusions
-  sprite_gen = sprite_generators.shuffle(sprite_gen)
+    target_sprite_gen = sprite_generators.generate_sprites(
+        target_factors, num_sprites=NUM_TARGETS
+    )
+    distractor_sprite_gen = sprite_generators.generate_sprites(
+        distractor_factors, num_sprites=MODES_NUM_DISTRACTORS[mode]
+    )
+    sprite_gen = sprite_generators.chain_generators(
+        target_sprite_gen, distractor_sprite_gen
+    )
+    # Randomize sprite ordering to eliminate any task information from occlusions
+    sprite_gen = sprite_generators.shuffle(sprite_gen)
 
-  task = tasks.FindGoalPosition(
-      filter_distrib=target_hue, terminate_distance=TERMINATE_DISTANCE)
+    task = tasks.FindGoalPosition(
+        filter_distrib=target_hue, terminate_distance=TERMINATE_DISTANCE
+    )
 
-  config = {
-      'task': task,
-      'action_space': common.action_space(),
-      'renderers': common.renderers(),
-      'init_sprites': sprite_gen,
-      'max_episode_length': 20,
-      'metadata': {
-          'name': os.path.basename(__file__),
-          'mode': mode
-      }
-  }
-  return config
+    config = {
+        "task": task,
+        "action_space": common.action_space(),
+        "renderers": common.renderers(),
+        "init_sprites": sprite_gen,
+        "max_episode_length": 20,
+        "metadata": {"name": os.path.basename(__file__), "mode": mode},
+    }
+    return config

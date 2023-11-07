@@ -39,72 +39,69 @@ MAX_EPISODE_LENGTH = 50
 
 # Define possible clusters (here using Hue as selection attribute)
 CLUSTERS_DISTS = {
-    'red': distribs.Continuous('c0', 0.9, 1.),
-    'blue': distribs.Continuous('c0', 0.55, 0.65),
-    'green': distribs.Continuous('c0', 0.27, 0.37),
-    'yellow': distribs.Continuous('c0', 0.1, 0.2),
+    "red": distribs.Continuous("c0", 0.9, 1.0),
+    "blue": distribs.Continuous("c0", 0.55, 0.65),
+    "green": distribs.Continuous("c0", 0.27, 0.37),
+    "yellow": distribs.Continuous("c0", 0.1, 0.2),
 }
 
 # Define train/test generalization splits
 MODES = {
-    'train': ('blue', 'green'),
-    'test': ('red', 'yellow'),
+    "train": ("blue", "green"),
+    "test": ("red", "yellow"),
 }
 
 
-def get_config(mode='train'):
-  """Generate environment config.
+def get_config(mode="train"):
+    """Generate environment config.
 
-  Args:
-    mode: 'train' or 'test'.
+    Args:
+      mode: 'train' or 'test'.
 
-  Returns:
-    config: Dictionary defining task/environment configuration. Can be fed as
-      kwargs to environment.Environment.
-  """
+    Returns:
+      config: Dictionary defining task/environment configuration. Can be fed as
+        kwargs to environment.Environment.
+    """
 
-  # Select clusters to use, and their c0 factor distribution.
-  c0_clusters = [CLUSTERS_DISTS[cluster] for cluster in MODES[mode]]
-  print('Clustering task: {}, #sprites: {}'.format(MODES[mode],
-                                                   NUM_SPRITES_PER_CLUSTER))
+    # Select clusters to use, and their c0 factor distribution.
+    c0_clusters = [CLUSTERS_DISTS[cluster] for cluster in MODES[mode]]
+    print(
+        "Clustering task: {}, #sprites: {}".format(MODES[mode], NUM_SPRITES_PER_CLUSTER)
+    )
 
-  other_factors = distribs.Product([
-      distribs.Continuous('x', 0.1, 0.9),
-      distribs.Continuous('y', 0.1, 0.9),
-      distribs.Discrete('shape', ['square', 'triangle', 'circle']),
-      distribs.Discrete('scale', [0.13]),
-      distribs.Continuous('c1', 0.3, 1.),
-      distribs.Continuous('c2', 0.9, 1.),
-  ])
+    other_factors = distribs.Product(
+        [
+            distribs.Continuous("x", 0.1, 0.9),
+            distribs.Continuous("y", 0.1, 0.9),
+            distribs.Discrete("shape", ["square", "triangle", "circle"]),
+            distribs.Discrete("scale", [0.13]),
+            distribs.Continuous("c1", 0.3, 1.0),
+            distribs.Continuous("c2", 0.9, 1.0),
+        ]
+    )
 
-  # Generate the sprites to be used in this task, by combining Hue with the
-  # other factors.
-  sprite_factors = [
-      distribs.Product((other_factors, c0)) for c0 in c0_clusters
-  ]
-  # Convert to sprites, generating the appropriate number per cluster.
-  sprite_gen_per_cluster = [
-      sprite_generators.generate_sprites(
-          factors, num_sprites=NUM_SPRITES_PER_CLUSTER)
-      for factors in sprite_factors
-  ]
-  # Concat clusters into single scene to generate.
-  sprite_gen = sprite_generators.chain_generators(*sprite_gen_per_cluster)
-  # Randomize sprite ordering to eliminate any task information from occlusions
-  sprite_gen = sprite_generators.shuffle(sprite_gen)
+    # Generate the sprites to be used in this task, by combining Hue with the
+    # other factors.
+    sprite_factors = [distribs.Product((other_factors, c0)) for c0 in c0_clusters]
+    # Convert to sprites, generating the appropriate number per cluster.
+    sprite_gen_per_cluster = [
+        sprite_generators.generate_sprites(factors, num_sprites=NUM_SPRITES_PER_CLUSTER)
+        for factors in sprite_factors
+    ]
+    # Concat clusters into single scene to generate.
+    sprite_gen = sprite_generators.chain_generators(*sprite_gen_per_cluster)
+    # Randomize sprite ordering to eliminate any task information from occlusions
+    sprite_gen = sprite_generators.shuffle(sprite_gen)
 
-  # Clustering task will define rewards
-  task = tasks.Clustering(c0_clusters, terminate_bonus=0., reward_range=10.)
+    # Clustering task will define rewards
+    task = tasks.Clustering(c0_clusters, terminate_bonus=0.0, reward_range=10.0)
 
-  config = {
-      'task': task,
-      'action_space': common.action_space(),
-      'renderers': common.renderers(),
-      'init_sprites': sprite_gen,
-      'max_episode_length': MAX_EPISODE_LENGTH,
-      'metadata': {
-          'name': os.path.basename(__file__),
-          'mode': mode
-      }
-  }
-  return config
+    config = {
+        "task": task,
+        "action_space": common.action_space(),
+        "renderers": common.renderers(),
+        "init_sprites": sprite_gen,
+        "max_episode_length": MAX_EPISODE_LENGTH,
+        "metadata": {"name": os.path.basename(__file__), "mode": mode},
+    }
+    return config

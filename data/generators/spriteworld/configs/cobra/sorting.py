@@ -39,99 +39,107 @@ from spriteworld.configs.cobra import common
 # Task Parameters
 MAX_EPISODE_LENGTH = 50
 TERMINATE_DISTANCE = 0.075
-RAW_REWARD_MULTIPLIER = 20.
+RAW_REWARD_MULTIPLIER = 20.0
 NUM_TARGETS = 2
 
 # Sub-tasks for each color/goal
 SUBTASKS = (
     {
-        'distrib': distribs.Continuous('c0', 0.9, 1.),  # red
-        'goal_position': np.array([0.75, 0.75])
+        "distrib": distribs.Continuous("c0", 0.9, 1.0),  # red
+        "goal_position": np.array([0.75, 0.75]),
     },
     {
-        'distrib': distribs.Continuous('c0', 0.55, 0.65),  # blue
-        'goal_position': np.array([0.75, 0.25])
+        "distrib": distribs.Continuous("c0", 0.55, 0.65),  # blue
+        "goal_position": np.array([0.75, 0.25]),
     },
     {
-        'distrib': distribs.Continuous('c0', 0.27, 0.37),  # green
-        'goal_position': np.array([0.25, 0.75])
+        "distrib": distribs.Continuous("c0", 0.27, 0.37),  # green
+        "goal_position": np.array([0.25, 0.75]),
     },
     {
-        'distrib': distribs.Continuous('c0', 0.73, 0.83),  # purple
-        'goal_position': np.array([0.25, 0.25])
+        "distrib": distribs.Continuous("c0", 0.73, 0.83),  # purple
+        "goal_position": np.array([0.25, 0.25]),
     },
     {
-        'distrib': distribs.Continuous('c0', 0.1, 0.2),  # yellow
-        'goal_position': np.array([0.5, 0.5])
+        "distrib": distribs.Continuous("c0", 0.1, 0.2),  # yellow
+        "goal_position": np.array([0.5, 0.5]),
     },
 )
 
 
-def get_config(mode='train'):
-  """Generate environment config.
+def get_config(mode="train"):
+    """Generate environment config.
 
-  Args:
-    mode: 'train' or 'test'.
+    Args:
+      mode: 'train' or 'test'.
 
-  Returns:
-    config: Dictionary defining task/environment configuration. Can be fed as
-      kwargs to environment.Environment.
-  """
+    Returns:
+      config: Dictionary defining task/environment configuration. Can be fed as
+        kwargs to environment.Environment.
+    """
 
-  # Create the subtasks and their corresponding sprite generators
-  subtasks = []
-  sprite_gen_per_subtask = []
-  for subtask in SUBTASKS:
-    subtasks.append(tasks.FindGoalPosition(
-        filter_distrib=subtask['distrib'],
-        goal_position=subtask['goal_position'],
-        terminate_distance=TERMINATE_DISTANCE,
-        raw_reward_multiplier=RAW_REWARD_MULTIPLIER))
-    factors = distribs.Product((
-        subtask['distrib'],
-        distribs.Continuous('x', 0.1, 0.9),
-        distribs.Continuous('y', 0.1, 0.9),
-        distribs.Discrete('shape', ['square', 'triangle', 'circle']),
-        distribs.Discrete('scale', [0.13]),
-        distribs.Continuous('c1', 0.3, 1.),
-        distribs.Continuous('c2', 0.9, 1.),
-        ))
-    sprite_gen_per_subtask.append(
-        sprite_generators.generate_sprites(factors, num_sprites=1))
+    # Create the subtasks and their corresponding sprite generators
+    subtasks = []
+    sprite_gen_per_subtask = []
+    for subtask in SUBTASKS:
+        subtasks.append(
+            tasks.FindGoalPosition(
+                filter_distrib=subtask["distrib"],
+                goal_position=subtask["goal_position"],
+                terminate_distance=TERMINATE_DISTANCE,
+                raw_reward_multiplier=RAW_REWARD_MULTIPLIER,
+            )
+        )
+        factors = distribs.Product(
+            (
+                subtask["distrib"],
+                distribs.Continuous("x", 0.1, 0.9),
+                distribs.Continuous("y", 0.1, 0.9),
+                distribs.Discrete("shape", ["square", "triangle", "circle"]),
+                distribs.Discrete("scale", [0.13]),
+                distribs.Continuous("c1", 0.3, 1.0),
+                distribs.Continuous("c2", 0.9, 1.0),
+            )
+        )
+        sprite_gen_per_subtask.append(
+            sprite_generators.generate_sprites(factors, num_sprites=1)
+        )
 
-  # Consider all combinations of subtasks
-  subtask_combos = list(
-      itertools.combinations(np.arange(len(SUBTASKS)), NUM_TARGETS))
-  if mode == 'train':
-    # Randomly sample a combination of subtasks, holding one combination out
-    sprite_gen = sprite_generators.sample_generator([
-        sprite_generators.chain_generators(
-            *[sprite_gen_per_subtask[i] for i in c]) for c in subtask_combos[1:]
-    ])
+    # Consider all combinations of subtasks
+    subtask_combos = list(itertools.combinations(np.arange(len(SUBTASKS)), NUM_TARGETS))
+    if mode == "train":
+        # Randomly sample a combination of subtasks, holding one combination out
+        sprite_gen = sprite_generators.sample_generator(
+            [
+                sprite_generators.chain_generators(
+                    *[sprite_gen_per_subtask[i] for i in c]
+                )
+                for c in subtask_combos[1:]
+            ]
+        )
 
-  elif mode == 'test':
-    # Use the held-out subtask combination for testing
-    sprite_gen = sprite_generators.chain_generators(
-        *[sprite_gen_per_subtask[i] for i in subtask_combos[0]])
-  else:
-    raise ValueError('Invalide mode {}.'.format(mode))
+    elif mode == "test":
+        # Use the held-out subtask combination for testing
+        sprite_gen = sprite_generators.chain_generators(
+            *[sprite_gen_per_subtask[i] for i in subtask_combos[0]]
+        )
+    else:
+        raise ValueError("Invalide mode {}.".format(mode))
 
-  # Randomize sprite ordering to eliminate any task information from occlusions
-  sprite_gen = sprite_generators.shuffle(sprite_gen)
+    # Randomize sprite ordering to eliminate any task information from occlusions
+    sprite_gen = sprite_generators.shuffle(sprite_gen)
 
-  task = tasks.MetaAggregated(
-      subtasks, reward_aggregator='sum', termination_criterion='all')
+    task = tasks.MetaAggregated(
+        subtasks, reward_aggregator="sum", termination_criterion="all"
+    )
 
-  config = {
-      'task': task,
-      'action_space': common.action_space(),
-      'renderers': common.renderers(),
-      'init_sprites': sprite_gen,
-      'max_episode_length': MAX_EPISODE_LENGTH,
-      'metadata': {
-          'name': os.path.basename(__file__),
-          'mode': mode
-      }
-  }
+    config = {
+        "task": task,
+        "action_space": common.action_space(),
+        "renderers": common.renderers(),
+        "init_sprites": sprite_gen,
+        "max_episode_length": MAX_EPISODE_LENGTH,
+        "metadata": {"name": os.path.basename(__file__), "mode": mode},
+    }
 
-  return config
+    return config

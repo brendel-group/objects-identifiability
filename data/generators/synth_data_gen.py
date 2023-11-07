@@ -4,6 +4,7 @@ import utils
 from scipy.stats import wishart
 from torch.distributions.multivariate_normal import MultivariateNormal
 
+
 def gen_synth_data(args):
     """
     Generates synthetic data from a latent variable model with a compositional generator
@@ -18,20 +19,33 @@ def gen_synth_data(args):
     """
     if bool(args.dependent):
         # sample random covariance matrix
-        sigma = wishart.rvs(args.gt_slot_dim * args.num_slots, np.eye(args.gt_slot_dim * args.num_slots), size=1)
+        sigma = wishart.rvs(
+            args.gt_slot_dim * args.num_slots,
+            np.eye(args.gt_slot_dim * args.num_slots),
+            size=1,
+        )
 
         # sample latents from gaussian with zero mean and sampled covariance
-        dist = MultivariateNormal(torch.FloatTensor([0.] * args.gt_slot_dim * args.num_slots), torch.FloatTensor(sigma))
+        dist = MultivariateNormal(
+            torch.FloatTensor([0.0] * args.gt_slot_dim * args.num_slots),
+            torch.FloatTensor(sigma),
+        )
         Z = dist.sample([args.nobs]).float()
 
     else:
         # sample latents from unit gaussian
-        Z = torch.from_numpy(np.random.normal(0., 1., size=(args.nobs, args.num_slots*args.gt_slot_dim))).float()
+        Z = torch.from_numpy(
+            np.random.normal(
+                0.0, 1.0, size=(args.nobs, args.num_slots * args.gt_slot_dim)
+            )
+        ).float()
 
     Z = Z.reshape(args.nobs, args.num_slots, args.gt_slot_dim)
 
     # construct ground-truth slot-wise generator
-    slot_mixing = utils.construct_invertible_mlp(os_dim=args.slot_x_dim, zs_dim=args.gt_slot_dim, n_layers=2)
+    slot_mixing = utils.construct_invertible_mlp(
+        os_dim=args.slot_x_dim, zs_dim=args.gt_slot_dim, n_layers=2
+    )
 
     # render first slot
     X = slot_mixing(Z[:, 0, :])
