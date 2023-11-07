@@ -1,7 +1,7 @@
 # Provably Learning Object-Centric Representations [ICML 2023]
 Official code for the paper [Provably Learning Object-Centric Representations](https://arxiv.org/abs/2305.14229).
 
-![Problem Setup](https://github.com/JackBrady/ocr-identifiability/blob/main/problem_setup.png)
+![Problem Setup](problem_setup.png)
 
 ## Synthetic Data
 The experiments on synthetic non-image data in Section 5.1 of the paper can be run with the following command:
